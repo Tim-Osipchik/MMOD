@@ -15,8 +15,8 @@ class QueuingSystemModel:
         self.queue_waiting_flow_rate = queue_waiting_flow_rate
 
         self.applications_in_queue_time = []
-        self.applications_in_queue = []
         self.applications_QS_times = []
+        self.applications_in_queue = []
         self.rejected_applications = []
         self.total_applications = []
         self.processed_applications = []
