@@ -6,7 +6,7 @@ class QueuingSystemModel:
     def __init__(self,
                  channels_number,
                  service_flow_rate,
-                 queue_waiting_flow_rate=None,
+                 queue_waiting_flow_rate,
                  ):
         self.env = simpy.Environment()
         self.channel = simpy.Resource(self.env, channels_number)
