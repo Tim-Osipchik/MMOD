@@ -10,6 +10,7 @@ class QueuingSystemModel:
                  ):
         self.env = simpy.Environment()
         self.channel = simpy.Resource(self.env, channels_number)
+        self.channels_number = channels_number
 
         self.service_flow_rate = service_flow_rate
         self.queue_waiting_flow_rate = queue_waiting_flow_rate
@@ -58,11 +59,11 @@ class QueuingSystemModel:
                 self.applications_in_queue_time.append(0)
                 self.applications_QS_times.append(0)
 
-    def __run_simulation(self, max_queue_length, applications_flow_rate, channels_number):
+    def __run_simulation(self, max_queue_length, applications_flow_rate):
         while True:
             yield self.env.timeout(np.random.exponential(1 / applications_flow_rate))
-            self.env.process(self.__simulate_process(max_queue_length, channels_number))
+            self.env.process(self.__simulate_process(max_queue_length, self.channels_number))
 
-    def run(self, run_count, max_queue_length, applications_flow_rate, channels_number):
-        self.env.process(self.__run_simulation(max_queue_length, applications_flow_rate, channels_number))
+    def run(self, run_count, max_queue_length, applications_flow_rate):
+        self.env.process(self.__run_simulation(max_queue_length, applications_flow_rate))
         self.env.run(until=run_count)

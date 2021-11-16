@@ -103,9 +103,16 @@ def calculate_theoretical_probabilities(
     }))
 
 
+def show_plot(data, title):
+    fig, axs = plt.subplots(1)
+    axs.hist(np.array(data), 100)
+    axs.set_title(title)
+    plt.show()
+
+
 if __name__ == '__main__':
     model = QueuingSystemModel(CHANNELS_NUMBER, PROCESSING_FLOW_RATE, WAITING_FLOW_RATE)
-    model.run(10_000, MAX_QUEUE_LENGTH, APPLICATIONS_FLOW_RATE, CHANNELS_NUMBER)
+    model.run(10_000, MAX_QUEUE_LENGTH, APPLICATIONS_FLOW_RATE)
 
     calculate_empiric_probabilities(model, APPLICATIONS_FLOW_RATE)
     calculate_theoretical_probabilities(
@@ -116,7 +123,5 @@ if __name__ == '__main__':
         WAITING_FLOW_RATE,
     )
 
-    fig, axs = plt.subplots(1)
-    axs.hist(np.array(model.applications_QS_times), 100)
-    axs.set_title('Wait times')
-    plt.show()
+    show_plot(model.applications_QS_times, 'Wait times')
+    show_plot(model.total_applications, 'total applications')
