@@ -5,11 +5,11 @@ import pandas as pd
 
 from queuingSystemModel import QueuingSystemModel
 
-CHANNELS_NUMBER = 2
+CHANNELS_NUMBER = 4
 PROCESSING_FLOW_RATE = 4
 APPLICATIONS_FLOW_RATE = 3
 WAITING_FLOW_RATE = 1
-MAX_QUEUE_LENGTH = 2
+MAX_QUEUE_LENGTH = 4
 SIMULATIONS_COUNT = 100
 
 
@@ -25,6 +25,14 @@ def calculate_empiric_probabilities(model, applications_flow_rate):
     flow_rate_value = applications_flow_rate * probability_of_finished
 
     print('Empiric Probabilities')
+
+    probabilities = []
+    count = 0
+    for value in range(1, model.channels_number + MAX_QUEUE_LENGTH + 1):
+        probabilities.append(len(applications_done[applications_done == value]) / total_applications_amount)
+        print('P' + str(count) + ': ' + str(probabilities[-1]))
+        count = count + 1
+
     print(pd.DataFrame({
         'Rejection': [probabilities_of_rejection],
         'Finished': [probability_of_finished],
@@ -39,6 +47,8 @@ def calculate_empiric_probabilities(model, applications_flow_rate):
         'busy channels': [probability_of_finished * APPLICATIONS_FLOW_RATE / PROCESSING_FLOW_RATE],
         'wait time': [np.array(model.applications_QS_times).mean()],
     }))
+
+    return probabilities
 
 
 def calculate_average_values(ro, betta, pn, initial_probability, channels_count, max_queue_length):
@@ -87,6 +97,17 @@ def calculate_theoretical_probabilities(
     )
 
     print('\n\nTheoretical Probabilities')
+
+    probabilities = [initial_probability]
+    for value in range(1, channels_count + 1):
+        probabilities.append((ro ** value / factorial(value)) * initial_probability)
+        print('P' + str(value) + ': ' + str(probabilities[-1]))
+
+    last_channel_prob = probabilities[-1]
+    for value in range(1, max_queue_length + 1):
+        probabilities.append((ro ** max_queue_length / get_channels_product(value)) * last_channel_prob)
+        print('P' + str(channels_count + value) + ': ' + str(probabilities[-1]))
+
     print(pd.DataFrame({
         'Rejection': [probabilities_of_rejection],
         'Finished': [probability_of_finished],
@@ -102,6 +123,8 @@ def calculate_theoretical_probabilities(
         'wait time': [average_applications_in_QS / applications_flow_rate],
     }))
 
+    return probabilities
+
 
 def show_plot(data, title):
     fig, axs = plt.subplots(1)
@@ -114,8 +137,8 @@ if __name__ == '__main__':
     model = QueuingSystemModel(CHANNELS_NUMBER, PROCESSING_FLOW_RATE, WAITING_FLOW_RATE)
     model.run(10_000, MAX_QUEUE_LENGTH, APPLICATIONS_FLOW_RATE)
 
-    calculate_empiric_probabilities(model, APPLICATIONS_FLOW_RATE)
-    calculate_theoretical_probabilities(
+    empiric_probabilities = calculate_empiric_probabilities(model, APPLICATIONS_FLOW_RATE)
+    theoretical_probabilities = calculate_theoretical_probabilities(
         CHANNELS_NUMBER,
         MAX_QUEUE_LENGTH,
         APPLICATIONS_FLOW_RATE,
@@ -124,4 +147,9 @@ if __name__ == '__main__':
     )
 
     show_plot(model.applications_QS_times, 'Wait times')
-    show_plot(model.total_applications, 'total applications')
+
+    fig, axs = plt.subplots()
+    axs.bar([i - 0.2 for i in range(len(empiric_probabilities))], empiric_probabilities, width=0.4, label='empiric')
+    axs.bar([i + 0.2 for i in range(len(theoretical_probabilities))], theoretical_probabilities, width=0.4, label='theoretical')
+    plt.legend()
+    plt.show()
